@@ -5,6 +5,7 @@
 
 var fs,
 		inputFileName,
+		exploreLinksCSVFileName,
 		outputFileName,
 		csvFileData,
 		catid,
@@ -13,12 +14,14 @@ var fs,
  		ParentCategory,
  		FiddleData,
  		FiddleToCategory,
+ 		ExploreLinks,
  		Operations;
 
 //fs module loading
 fs = require("fs");
 //variable defination
 inputFileName = "fiddleData-maping.csv";
+exploreLinksCSVFileName = "exploreLinks.csv";
 outputFileName = "demo.json";
 catid = 0;
 fiddleid = 0;
@@ -140,6 +143,22 @@ FiddleToCategory = {
 
 
 /**
+ * @description -
+ */
+ExploreLinks = {
+	data : [],
+	set : function(){
+		var data;
+		data =fs.readFileSync(exploreLinksCSVFileName, "utf-8").split("\n");
+		for(var i=0; i<data.length; i++){
+			ExploreLinks.data.push({FilteredBy:data[0], Text:data[1], Links: data[2]});
+		}
+	}
+};
+
+
+
+/**
  * @description - Some internal operation and functionallity
  */
 Operations = {
@@ -151,7 +170,7 @@ Operations = {
 			viz = obj[1]+","+obj[2];
 
 		if(obj[3] && typeof obj[3] !== "undefined")
-			viz = viz+","+obj[3];
+			viz = viz+","+obj[3].replace(/\|/ig, ", ");
 
 		return viz;
 	},
@@ -180,6 +199,7 @@ Operations = {
 	 output.ChildCategoryData = prepChild;
 	 output.FiddlesData = prepFiddle;
 	 output.FiddleToCategory = FiddleToCategory.data;
+	 output.ExploreLinks = ExploreLinks.data;
 	 
 	 fs.writeFileSync(outputFileName, JSON.stringify(output, null, 4));
 	},
@@ -198,7 +218,10 @@ Operations = {
 			//data mapping
 			FiddleToCategory.set({fiddle_id:fid, category_id:ChildCategory.get(data[1])});
 			FiddleToCategory.set({fiddle_id:fid, category_id:cid});
-		}
+		} //end of for loop
+
+		//create explorelinks
+		ExploreLinks.set();
 	}
 };
 

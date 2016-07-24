@@ -9,21 +9,25 @@ var fs,
 		ChildCategoryData,
 		FiddleData,
 		FiddleToCategory,
+		ExploreLinks,
+		explinkOutputFilename,
 		removeValues,
 		_tempParentCat = [];
 
 fs = require("fs");
 outputFile = "fiddleData-maping.csv";
+explinkOutputFilename = "exploreLinks.csv";
 fileData = JSON.parse(fs.readFileSync("fiddleData.json")); //data fetching from JSON file
 ParentCategoryData = fileData.ParentCategoryData; //data assign
 ChildCategoryData = fileData.ChildCategoryData; //data assign
 FiddleData = fileData.FiddlesData; //data assign
-FiddleToCategory = fileData.FiddleToCategory; //data assign		
+FiddleToCategory = fileData.FiddleToCategory; //data assign
+ExploreLinks = fileData.ExploreLinks; //data assign		
 
 
-//CSV file creation
-fs.writeFileSync(outputFile, "Outer Wrapper, Parent Category, Child Category, Visualization Type, Fiddle Url, Fiddle Description, Fiddle Thumb");
-
+//CSV files creation
+fs.writeFileSync(outputFile, "Outer Wrapper, Parent Category, Child Category, Visualization Type, Fiddle Url, Fiddle Description, Fiddle Thumb", "utf-8");
+fs.writeFileSync(explinkOutputFilename, "FilteredBy, Text, Links", "utf-8");
 /**
  * @description - removing null or undefined values from the Array
  * @param {Array} - An array which have null, undefined or empty values
@@ -53,6 +57,7 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 			fdldata,
 			chldCatData,
 			prntCatData,
+			explink,
 			csvStr;
 	f2c = FiddleToCategory[i];
 
@@ -71,7 +76,6 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 		if(ParentCategoryData[l].cat_id === chldCatData.parent_cat_id)
 			prntCatData = ParentCategoryData[l];
 	} //end of for-l loop
-
 	
 	if(chldCatData.visualization_type.indexOf(",") !== -1) {
 		var viz,
@@ -98,4 +102,10 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 	//fs.appendFileSync("fiddleData-maping.csv", csvStr);		
 
 } //end of for-i loop
+
+
+for(var m=0; m<ExploreLinks.length; m++){
+	var csvstr = "\n" + ExploreLinks[m].FilteredBy +"," + ExploreLinks[m].Text +"," + ExploreLinks[m].Links;
+	fs.appendFileSync(explinkOutputFilename, csvstr);
+}
 
