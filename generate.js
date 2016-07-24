@@ -90,7 +90,7 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 	} else {
 		if(_tempParentCat.indexOf(chldCatData.cat_name) === -1){
 			_tempParentCat.push(chldCatData.cat_name);
-			csvStr = "\n"+ prntCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.visualization_type +",,,,";
+			csvStr = "\n"+ prntCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.cat_name +",,,,,";
 			fs.appendFileSync("fiddleData-maping.csv", csvStr);
 		}
 	}
