@@ -89,6 +89,7 @@ ChildCategory = {
 
 		if(!ChildCategory.data.hasOwnProperty(catName)){
 			obj.cat_id = getId.category();
+			obj.cat_name = obj.cat_name.replace(/\|/g,",");
 			ChildCategory.data[catName] = obj;
 			return obj.cat_id;
 		} else {
@@ -148,9 +149,10 @@ FiddleToCategory = {
 ExploreLinks = {
 	data : [],
 	set : function(){
-		var data;
-		data =fs.readFileSync(exploreLinksCSVFileName, "utf-8").split("\n");
-		for(var i=0; i<data.length; i++){
+		var explorelinks;
+		explorelinks =fs.readFileSync(exploreLinksCSVFileName, "utf-8").split("\n");
+		for(var i=1; i<explorelinks.length; i++){
+			var data = explorelinks[i].split(",");
 			ExploreLinks.data.push({FilteredBy:data[0], Text:data[1], Links: data[2]});
 		}
 	}
@@ -170,8 +172,9 @@ Operations = {
 			viz = obj[1]+","+obj[2];
 
 		if(obj[3] && typeof obj[3] !== "undefined")
-			viz = viz+","+obj[3].replace(/\|/ig, ", ");
+			viz = viz+","+obj[3];
 
+		viz = viz.replace(/\|/ig, ",");
 		return viz;
 	},
 	generate : function(){
