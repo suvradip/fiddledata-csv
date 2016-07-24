@@ -85,15 +85,17 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 		viz = removeValues({data:viz, chk: [parent_name.toLowerCase(), cat_name.toLowerCase()]}).join("|");
 		//CSV sring creation
 		csvStr = "\n"+ prntCatData.cat_name +","+ parent_name +","+ cat_name +","+ viz +","+
-			fdldata.fiddle_url +","+ fdldata.fiddle_description +","+ fdldata.fiddle_thumb;
+			fdldata.fiddle_url +","+ fdldata.fiddle_description.replace(/,/,"#") +","+ fdldata.fiddle_thumb;
+		fs.appendFileSync("fiddleData-maping.csv", csvStr);	
 	} else {
 		if(_tempParentCat.indexOf(chldCatData.cat_name) === -1){
 			_tempParentCat.push(chldCatData.cat_name);
 			csvStr = "\n"+ prntCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.visualization_type +",,,,";
+			fs.appendFileSync("fiddleData-maping.csv", csvStr);
 		}
 	}
 	//append data to the CSV file
-	fs.appendFileSync("fiddleData-maping.csv", csvStr);		
+	//fs.appendFileSync("fiddleData-maping.csv", csvStr);		
 
 } //end of for-i loop
 
