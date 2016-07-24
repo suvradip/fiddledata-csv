@@ -7,7 +7,6 @@ var fs,
 		csvFileData,
 		catid,
 		fiddleid,
-		parentid,
  		getId,
  		ParentCategory,
  		getParentCategory,
@@ -18,24 +17,28 @@ var fs,
  		ChildCategory,
  		getChildCategory,
  		setChildCategory,
- 		XChild,
- 		setXChild,
- 		getXChild,
  		fiddleToCategory,
+ 		setFiddleToCategory,
  		getVizDataFormat,
- 		generate,
- 		prepParent,
- 		prepChild,
- 		prepFiddle;
+ 		generate;
 
+//fs module loading
 fs = require("fs");
-catid = fiddleid =  parentid = 0;
-ParentCategory = ChildCategory = fiddleData = XChild = {};
+//variable defination
+catid = 0;
+fiddleid = 0;
+ParentCategory = {};
+ChildCategory = {};
+fiddleData = {};
+XChild = {};
 fiddleToCategory = [];
-
-//inmporting csv file	
+//inmporting csv file	using fs module
 csvFileData = fs.readFileSync("fiddleData-maping.csv","utf-8").split("\n");
 
+/**
+ * @description - generation id for categories and fiddles
+ * @return {Object} - with key values. {category: for category-id, fiddle: for fiddle-id}
+ */
 getId = {
 	category : function(){
 			catid = catid + 1;
@@ -44,14 +47,14 @@ getId = {
 	fiddle : function(){
 			fiddleid = fiddleid + 1;
 			return fiddleid;
-	},
-	parent : function(){
-			parentid = parentid + 1;
-			return parentid;
 	}
 };
 
-//return parent category-id
+/**
+ * @description - helps to find out the particular parent name from pool or parentCategory
+ * @param {String} name - Name of the parent
+ * @return {String} - Id of the parent  
+ */
 getParentCategory = (function(name){
 	return ParentCategory[name].cat_id;
 });
@@ -60,7 +63,7 @@ setParentCategory = (function(obj){
 	var catName;
 	catName = obj.cat_name.toLowerCase();
 	if(!ParentCategory.hasOwnProperty(obj.cat_name)) {
-		obj.cat_id = getId.parent();
+		obj.cat_id = getId.category(); //getId.parent();
 		ParentCategory[obj.cat_name] = obj;
 		return obj.cat_id;
 	} else {
@@ -77,8 +80,9 @@ setFiddleData = (function(obj){
 	var code,
 			furl;
 	furl = obj.fiddle_url;
+	
 	if(furl && typeof furl !== "undefined"){
-		code = furl.chartAt(furl.length - 1) === "/" ? furl.split("/").join("") : furl.split("/").pop();
+		code = furl.charAt(furl.length - 1) === "/" ? furl.split("/").join("") : furl.split("/").pop();
 		if(!fiddleData.hasOwnProperty(code)){
 			obj.fiddle_id = getId.fiddle();
 			fiddleData[code] = obj;
@@ -91,26 +95,10 @@ setFiddleData = (function(obj){
 	}	
 });
 
-/*getXChild = (function(name){
-	return XChild[name].id;
-});
-
-setXChild = (function(name){
-	var cat_id = getId.category();
-
-	if(!XChild.hasOwnProperty(name)){
-		XChild[name] = {id: cat_id};
-		return cat_id;
-	} else {
-		return getXChild(name);
-	}
-});*/
-
 
 //return child category-id
 getChildCategory = (function(name){
-	console.log(ChildCategory);
-	return ChildCategory[name].cat_id;
+	return ChildCategory[name.toLowerCase()].cat_id;
 });
 
 setChildCategory = (function(obj){
@@ -141,9 +129,20 @@ getVizDataFormat = (function(obj){
 	return viz;
 });
 
+setFiddleToCategory = (function(obj){
+	if(typeof obj.fiddle_id !== "undefined" && typeof obj.category_id !== "undefined") {
+		fiddleToCategory.push(obj);
+	}
+});
 
 generate = (function(){
-	prepParent = prepChild = prepFiddle = [];
+	var prepParent,
+ 			prepChild,
+ 			prepFiddle;
+
+	prepParent = [];
+	prepChild = [];
+	prepFiddle = [];
 	var output = {};
 	for(var pkey in ParentCategory) {
 		prepParent.push(ParentCategory[pkey]);
@@ -160,9 +159,9 @@ generate = (function(){
  output.ParentCategoryData = prepParent;
  output.ChildCategoryData = prepChild;
  output.FiddlesData = prepFiddle;
- output.FiddleToCategory= FiddleToCategory;
-
- fs.writeFileSync("demo.json", JSON.parese(output));
+ output.FiddleToCategory= fiddleToCategory;
+ 
+ fs.writeFileSync("demo.json", JSON.stringify(output, null, 4));
 });
 
 for(var i=1; i<csvFileData.length; i++) {
@@ -177,9 +176,8 @@ for(var i=1; i<csvFileData.length; i++) {
 	fid = setFiddleData({fiddle_url:data[4], fiddle_description:data[5], fiddle_thumb:data[6]});
 	
 	//data mapping
-	fiddleToCategory.push({fiddle_id:fid, category_id:getChildCategory(data[1])});
-	fiddleToCategory.push({fiddle_id:fid, category_id:cid});
-
+	setFiddleToCategory({fiddle_id:fid, category_id:getChildCategory(data[1])});
+	setFiddleToCategory({fiddle_id:fid, category_id:cid});
 }
 
 generate();
