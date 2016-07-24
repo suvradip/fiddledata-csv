@@ -2,19 +2,32 @@
  * @description - variable define and declaration.
  */
 
-var fs = require("fs"),
-		outputFile = "fiddleData-maping.csv",
-		fileData = JSON.parse(fs.readFileSync("fiddleData.json")), //data fetching from JSON file
-		ParentCategoryData = fileData.ParentCategoryData, //data assign
-		ChildCategoryData = fileData.ChildCategoryData, //data assign
-		FiddleData = fileData.FiddlesData, //data assign
-		FiddleToCategory = fileData.FiddleToCategory, //data assign
-		removeValues;
+var fs,
+		outputFile,
+		fileData,
+		ParentCategoryData,
+		ChildCategoryData,
+		FiddleData,
+		FiddleToCategory,
+		ExploreLinks,
+		explinkOutputFilename,
+		removeValues,
+		_tempParentCat = [];
+
+fs = require("fs");
+outputFile = "fiddleData-maping.csv";
+explinkOutputFilename = "exploreLinks.csv";
+fileData = JSON.parse(fs.readFileSync("fiddleData.json")); //data fetching from JSON file
+ParentCategoryData = fileData.ParentCategoryData; //data assign
+ChildCategoryData = fileData.ChildCategoryData; //data assign
+FiddleData = fileData.FiddlesData; //data assign
+FiddleToCategory = fileData.FiddleToCategory; //data assign
+ExploreLinks = fileData.ExploreLinks; //data assign		
 
 
-//CSV file creation
-fs.writeFileSync(outputFile, "Parent Category, Child Category, Visualization Type, Fiddle Url, Fiddle Description, Fiddle Thumb");
-
+//CSV files creation
+fs.writeFileSync(outputFile, "Outer Wrapper, Parent Category, Child Category, Visualization Type, Fiddle Url, Fiddle Description, Fiddle Thumb", "utf-8");
+fs.writeFileSync(explinkOutputFilename, "FilteredBy, Text, Links", "utf-8");
 /**
  * @description - removing null or undefined values from the Array
  * @param {Array} - An array which have null, undefined or empty values
@@ -37,13 +50,14 @@ removeValues= (function(obj){
 });
 
 /**
- * @description - preparation of data
+ * @description - preparation of data for csv file
  */
 for(var i=0; i<FiddleToCategory.length; i++) {
 	var f2c,
 			fdldata,
 			chldCatData,
 			prntCatData,
+			explink,
 			csvStr;
 	f2c = FiddleToCategory[i];
 
@@ -55,10 +69,6 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 	for(var k=0; k<ChildCategoryData.length; k++) {
 		if(ChildCategoryData[k].cat_id === f2c.category_id) {
 			chldCatData = ChildCategoryData[k];
-			// if(chldCatData.visualization_type.indexOf(",") !== -1) {
-			// 	chldCatData.viz = chldCatData.visualization_type.split(",")[0];
-			// 	console.log(chldCatData.viz);
-			// }
 		}
 	} //end of for-k loop
 	
@@ -66,27 +76,36 @@ for(var i=0; i<FiddleToCategory.length; i++) {
 		if(ParentCategoryData[l].cat_id === chldCatData.parent_cat_id)
 			prntCatData = ParentCategoryData[l];
 	} //end of for-l loop
-
-
+	
 	if(chldCatData.visualization_type.indexOf(",") !== -1) {
-		var checking = {};
-		chldCatData.visualization_type = chldCatData.visualization_type.split(",");
-		chldCatData.parent_name = chldCatData.visualization_type[0];
+		var viz,
+				parent_name,
+				cat_name;
 
-		checking[chldCatData.parent_name.toLowerCase()] =1;
-		checking[chldCatData.cat_name.toLowerCase()] = 2;
-
-		chldCatData.visualization_type = removeValues({data:chldCatData.visualization_type, 
-																	chk: [chldCatData.parent_name.toLowerCase(), chldCatData.cat_name.toLowerCase()]});
-		chldCatData.visualization_type = chldCatData.visualization_type.join("|");
-		//chldCatData.visualization_type = chldCatData.visualization_type.slice(0, chldCatData.visualization_type.length).join("|");
-		//chldCatData.visualization_type = chldCatData.visualization_type.slice(2, chldCatData.visualization_type.length).join("|");
+		viz = chldCatData.visualization_type.split(",");
+		parent_name = viz[0];
+		cat_name = chldCatData.cat_name;
+		
+		viz = removeValues({data:viz, chk: [parent_name.toLowerCase(), cat_name.toLowerCase()]}).join("|");
 		//CSV sring creation
-		csvStr = "\n" + chldCatData.parent_name +","+ chldCatData.cat_name +","+ chldCatData.visualization_type +","+
-			fdldata.fiddle_url +","+ fdldata.fiddle_description +","+ fdldata.fiddle_thumb;
+		csvStr = "\n"+ prntCatData.cat_name +","+ parent_name +","+ cat_name.replace(/,/g,"|") +","+ viz +","+
+			fdldata.fiddle_url +","+ fdldata.fiddle_description.replace(/,/,"#") +","+ fdldata.fiddle_thumb;
+		fs.appendFileSync("fiddleData-maping.csv", csvStr);	
+	} else {
+		if(_tempParentCat.indexOf(chldCatData.cat_name) === -1){
+			_tempParentCat.push(chldCatData.cat_name);
+			csvStr = "\n"+ prntCatData.cat_name +","+ chldCatData.cat_name +","+ chldCatData.cat_name +",,,,,";
+			fs.appendFileSync("fiddleData-maping.csv", csvStr);
+		}
 	}
 	//append data to the CSV file
-	fs.appendFileSync("fiddleData-maping.csv", csvStr);		
+	//fs.appendFileSync("fiddleData-maping.csv", csvStr);		
 
 } //end of for-i loop
+
+
+for(var m=0; m<ExploreLinks.length; m++){
+	var csvstr = "\n" + ExploreLinks[m].FilteredBy +"," + ExploreLinks[m].Text +"," + ExploreLinks[m].Links;
+	fs.appendFileSync(explinkOutputFilename, csvstr);
+}
 
