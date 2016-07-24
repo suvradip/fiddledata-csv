@@ -1,0 +1,7 @@
+#ignore all files
+*
+
+#includind scrip and gitignore file
+!generate.js
+!generate-json.js
+!.gitignore
