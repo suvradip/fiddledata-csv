@@ -134,10 +134,13 @@ FiddleData = {
  * @description - Mapping each fiddle to each category
  */
 FiddleToCategory = {
-	data : [],
+	data : {},
 	set : function(obj){
 		if(typeof obj.fiddle_id !== "undefined" && typeof obj.category_id !== "undefined") {
-			FiddleToCategory.data.push(obj);
+			var code;
+			code = "F"+obj.fiddle_id+"C"+obj.category_id;
+			if(!FiddleToCategory.data.hasOwnProperty(code))
+				FiddleToCategory.data[code] = obj;
 		}
 	}
 };
@@ -180,12 +183,16 @@ Operations = {
 	generate : function(){
 		var prepParent,
 	 			prepChild,
-	 			prepFiddle;
+	 			prepFiddle,
+	 			prepfFiddleToCat,
+	 			output;
 
 		prepParent = [];
 		prepChild = [];
 		prepFiddle = [];
-		var output = {};
+		prepfFiddleToCat = [];
+		output = {};
+		
 		for(var pkey in ParentCategory.data) {
 			prepParent.push(ParentCategory.data[pkey]);
 		}
@@ -197,11 +204,15 @@ Operations = {
 		for(var fkey in FiddleData.data) {
 			prepFiddle.push(FiddleData.data[fkey]);
 		}
+
+		for(var ftckey in FiddleToCategory.data) {
+			prepfFiddleToCat.push(FiddleToCategory.data[ftckey]);
+		}
 	 
 	 output.ParentCategoryData = prepParent;
 	 output.ChildCategoryData = prepChild;
 	 output.FiddlesData = prepFiddle;
-	 output.FiddleToCategory = FiddleToCategory.data;
+	 output.FiddleToCategory = prepfFiddleToCat;
 	 output.ExploreLinks = ExploreLinks.data;
 	 
 	 fs.writeFileSync(outputFileName, JSON.stringify(output, null, 4));
